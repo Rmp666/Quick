@@ -15,9 +15,9 @@ class ArticleController extends Controller
      */
     public function index()
     {
-        $articles = Article::select(['id', 'user_id', 'contview', 'title', 'discr'])-> orderBy('updated_at','DESC')->get();
-        
-        return view('index')->with([ 'articles' => $articles ]);
+        $articles = Article::with('downloads')->get();
+        //dump ($articles); exit();
+        return view('index')->with([ 'articles' => $articles]);
     }
 
     /**
@@ -41,8 +41,9 @@ class ArticleController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', Article::class);
-                
-        $this->validate($request, 
+
+//        dump($request);        exit();
+        $request->validate(
         [
             'title' => 'required|max:150',
             'text'  => 'required',
@@ -60,7 +61,17 @@ class ArticleController extends Controller
         $articles->discr = $discrible;
         $articles->user_id = $request->user_id;
         $articles->save();
-
+        
+        if ($request->has('download_id'))
+        {
+            $downloads = explode(',', $request['download_id']);
+            
+            foreach ($downloads as $id)
+            {
+                $articles->downloads()->attach($id);
+            }
+        }
+        
         return redirect()->route('articles.index');
     }
 
@@ -108,7 +119,7 @@ class ArticleController extends Controller
             'text'  => 'required',
             'user_id' => 'required'
         ]);
-        dump('iam here');
+
         $articles = Article::find($article->id);
         
         $discrible= $request->text;

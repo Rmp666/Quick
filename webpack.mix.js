@@ -18,6 +18,8 @@ mix.autoload({
     jquery: ['$','window.jQuery',"jQuery","window.$","jquery","window.jquery"]});
 mix.js('resources/js/app.js', 'public/js/')
     .js('resources/js/index.js', 'public/js/')
+    .js('resources/js/create.js', 'public/js/')
+    .js('resources/js/downloads/upload.js', 'public/js/')
     .extract(['jquery', 'bootstrap'])
     .sourceMaps();
 mix.styles(

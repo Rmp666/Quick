@@ -15,4 +15,11 @@ class Article extends Model
     {
         return $this->belongsTo('App\User');
     } 
+    // Связь с downloads через таблицу Downloadable
+    public function downloads ()
+    {
+        return $this->morphToMany(Download::class, 'downloadable');
+    } 
+    
 }
+

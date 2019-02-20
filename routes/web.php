@@ -15,5 +15,9 @@ Route::get('/', 'Api\ArticleController@index');
 
 Route::resource('articles', 'Api\ArticleController');
 
+Route::resource('/download', 'DownloadController')->only(['store', 'update', 'destroy']);
+
+Route::get('/download/{download}', 'DownloadController@load')->name('load');
+
 Auth::routes();
 
