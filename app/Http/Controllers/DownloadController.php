@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Download;
+use App\Article;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 
-class DownloadController extends Controller
+class DownloadController  extends Controller 
 {
     public function store(Request $request)
     {
@@ -16,8 +16,11 @@ class DownloadController extends Controller
         foreach ($data['upload'] as $keys => $values)
         {
             $file = $values['file'];
+            
+            // Сохранение файла на локальном диске public
             $path = $file->store('uploads', 'public');
             
+            // Сохранение файла в БД
             $download = Download::create(
             [
                 'title' => $values['fileName'],
@@ -29,14 +32,8 @@ class DownloadController extends Controller
             array_push($idFiles, $download->id);
         }
         
+        // Массив с id для привязки к статье
         return $idFiles;
-        // dump( $boo=Arr::dot($request->file('upload')) );
-        //$request->all();
-    }
-
-    public function update(Request $request, Download $download)
-    {
-        //
     }
 
     /**
@@ -45,11 +42,29 @@ class DownloadController extends Controller
      * @param  \App\Download  $download
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Download $download)
+    public function destroy(Request $request, Download $download)
     {
-        //
-    }
+        // Удаляем связи с файлом для статьи, id которой передали в Request
+        $article = Article::where('id', $request->id)->first();
+        $article->downloads()->detach($download->id);
+        
+        // Количество файлов привязанное к статье после удаления
+        $count = $article->downloads()->count();
+                
+        //Удаляем файл из папки Storage
+        if(!\Storage::disk('public')->delete($download->path))
+        {
+            return ['result' => 'Dont remove this file'];
+        }
+        // Удаляем файл из бд
+        
+        if ($download->delete())
+        {
+            return ['result' => 'Delete success', 'countFiles' =>$count];
+        }
+    }   
     
+    // Формирование ссылок и заголовков для загрузки файла с сервера
     public function load(Download $download)
     {
         return response()->download(storage_path('app/public/'. $download->path));

@@ -1,7 +1,7 @@
 <form class="d-none" id="formUpload">
-    @csrf
+@csrf
     
-    <script src="{{ asset('js/upload.js') }}"></script>
+<script src="{{ asset('js/create_edit_view.js') }}"></script>
     
     <div class="card mt-2 card-container">
         
@@ -12,10 +12,10 @@
 
             <div class="card-body">
                 <div class="btn-toolbar justify-content-between" role="toolbar" aria-label="Toolbar with button groups">
-                    <div class="btn-group" role="group" aria-label="First group">
+                    <div class="btn-group w-50" role="group" aria-label="First group">
                         <div class="custom-file">
                             <input type="file" class="custom-file-input" name="upload['1'][file]" id="customFile" placeholder="Enter filename">
-                            <label class="custom-file-label" for="customFile">
+                            <label class="custom-file-label label-name" for="customFile">
                                 Choose file
                             </label>
                         </div>

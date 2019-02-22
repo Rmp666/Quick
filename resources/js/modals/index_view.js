@@ -1,3 +1,4 @@
+// Считываем информацию с атрибутов data и заполняем форму в модальном окне
 $('body').on('click', '[data-action="modal-show"]', showModal);
 
 function showModal(e) 

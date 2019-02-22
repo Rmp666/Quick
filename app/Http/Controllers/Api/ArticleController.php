@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Article;
+use App\Download;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -15,8 +16,7 @@ class ArticleController extends Controller
      */
     public function index()
     {
-        $articles = Article::with('downloads')->get();
-        //dump ($articles); exit();
+        $articles = Article::with('downloads')->paginate(4);
         return view('index')->with([ 'articles' => $articles]);
     }
 
@@ -42,7 +42,6 @@ class ArticleController extends Controller
     {
         $this->authorize('create', Article::class);
 
-//        dump($request);        exit();
         $request->validate(
         [
             'title' => 'required|max:150',
@@ -62,7 +61,8 @@ class ArticleController extends Controller
         $articles->user_id = $request->user_id;
         $articles->save();
         
-        if ($request->has('download_id'))
+        // Создаем новые связи с файлами в downloadable
+        if ($request->download_id !== null)
         {
             $downloads = explode(',', $request['download_id']);
             
@@ -86,7 +86,7 @@ class ArticleController extends Controller
         $article->contview = $article->contview+1;
         Article::where('id', $article->id)->update(['contview'=>$article->contview]); 
         
-        return view('read')->with([ 'articles' => $article ]);
+        return view('read')->with([ 'articles' => $article::with('downloads')->where('id', $article->id)->first() ]);
     }
 
     /**
@@ -98,8 +98,8 @@ class ArticleController extends Controller
     public function edit(Article $article)
     {
         $this->authorize('update', $article);
-        
-        return view('edit')->with([ 'articles' => $article ]);
+       
+        return view('edit')->with([ 'articles' => $article::with('downloads')->findOrFail($article->id)]);
     }
 
     /**
@@ -129,6 +129,17 @@ class ArticleController extends Controller
         $articles->text = $request->text;
         $articles->discr = $discrible;
         $articles->save();
+        
+        if ($request->download_id !== null)
+        {
+            // Создаем новые связи с файлами в downloadable
+            $downloads = explode(',', $request['download_id']);
+            
+            foreach ($downloads as $id)
+            {
+                $articles->downloads()->attach($id);
+            }
+        }
                 
         return redirect()->route('articles.index');
     }
@@ -141,10 +152,23 @@ class ArticleController extends Controller
      */
     public function destroy(Article $article)
     {
-        $this->authorize('delete', $article);
-
-        Article::where('id', $article->id)->delete();
+        // Удаляем файлы связанные с данной статьей из БД и из storage
+        $articleWithFile = $article::with('downloads')->where('id', $article->id)->first();
         
+        foreach ($articleWithFile->relationsToArray() as $values)
+        {
+            foreach ($values as $name => $value)
+            {
+                Download::where('id', $value['id'])->delete();
+                \Storage::disk('public')->delete($value['path']);
+            }
+        }
+       
+        // Удаляем все связи с таблицей downloadable
+        $article->downloads()->detach();
+        // Удаляем статью из бд
+        $article->delete();
+      
         return redirect()->route('articles.index');
     }
 }

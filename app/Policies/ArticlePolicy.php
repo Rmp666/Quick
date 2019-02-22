@@ -10,6 +10,7 @@ class ArticlePolicy
 {
     use HandlesAuthorization;
 
+    // Админ вне правил. Может все
     public function before($user, $ability)
     {
         if($user->role->code === "admin") 

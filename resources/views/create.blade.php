@@ -1,10 +1,9 @@
 @extends ('layouts.app')
 
 @section('content')
-<script src="{{ asset('js/create.js') }}"></script>
 <div class="container">
     @include('errors.request_errors')
-    <form method="POST" action="{{ route('articles.store') }}" id="createForm">
+    <form method="POST" action="{{ route('articles.store') }}" id="createEditForm">
         @csrf
         <div class="card">
             
